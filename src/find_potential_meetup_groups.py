@@ -77,7 +77,7 @@ class FindPotentialMeetupGroups(object):
         len_members = 0
 
         # Open file for write
-        file_name = '/tmp/meetups_{}.txt'.format(self.contributor_name)
+        file_name = 'meetups_{}.txt'.format(self.contributor_name)
         print "Writing results to file: {}".format(file_name)
         with open(file_name, 'w') as f:
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--api_key', type=str, required=True)
     parser.add_argument('--contributor_name', type=str, required=True)
-    parser.add_argument('--get_member_ids', dest='get_member_ids', action='store_true')
+    parser.add_argument('--dont_list_member_ids', dest='get_member_ids', action='store_false')
     parser.set_defaults(get_member_ids=True)
 
     args = parser.parse_args()
