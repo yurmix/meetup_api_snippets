@@ -8,7 +8,6 @@ import json
 import argparse
 import time
 
-
 class FindPotentialMeetupGroups(object):
     LAT_CENTER = 34.022352
     LON_CENTER = -118.285117
@@ -16,10 +15,11 @@ class FindPotentialMeetupGroups(object):
     OLD_EVENT_DAYS = 150
 
 
-    def __init__(self, api_key, contributor_name):
+    def __init__(self, api_key, contributor_name, get_member_ids):
         self.api_key = api_key
         self.contributor_name = contributor_name
         self.file_name = '/tmp/meetups_{}.txt'.format(self.contributor_name)
+        self.get_member_ids = get_member_ids
 
     # Helper method - calc meetup distance
     def _distance_from_center(self, lat, lon):
@@ -51,10 +51,20 @@ class FindPotentialMeetupGroups(object):
 
     # Helper method - call API
     def _raw_api_call(self, url):
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
-        res = response.read()
-        return json.loads(res)
+        jsn = ''
+        sleep_time = 1
+        while not jsn:
+            try:
+                req = urllib2.Request(url)
+                response = urllib2.urlopen(req)
+                code = response.getcode()
+                res = response.read()
+                jsn = json.loads(res)
+            except Exception, e:
+                print "Error: {}. Retrying in {} seconds...".format(e.message, sleep_time)
+                time.sleep(sleep_time)
+                sleep_time *= 2
+        return jsn
 
     # Helper method - build URL and call API
     def _simple_api_call(self, service_str, params_str=None):
@@ -62,6 +72,9 @@ class FindPotentialMeetupGroups(object):
 
     # main method
     def run(self):
+
+        members_pool = set()
+        len_members = 0
 
         # Open file for write
         file_name = '/tmp/meetups_{}.txt'.format(self.contributor_name)
@@ -89,12 +102,45 @@ class FindPotentialMeetupGroups(object):
                     print group_txt
                     f.write(group_txt + '\n')
 
+                    # Members
+                    if self.get_member_ids:
+
+                        f.write('###Members:' + '\n')
+                        res = self._simple_api_call('/2/members', 'group_id={}'.format(g['id']))
+
+                        cont = (len(res['results']) > 0)
+                        c = 0
+                        while cont:
+                            curr_batch = []
+                            print 'reading...'
+                            for x in res['results']:
+                                curr_batch.append(x['id'])
+                                if x['id'] not in members_pool:
+                                    members_pool.add(x['id'])
+                            # Get next batch
+                            if 'next' in res['meta'] and res['meta']['next']:
+                                res = self._raw_api_call(res['meta']['next'])
+                            else:
+                                cont = False
+                            c += len(curr_batch)
+                            print 'so far {} records.'.format(c)
+                            f.write(json.dumps(list(curr_batch)) + '\n')
+
+                        # Debug message
+                        print "Group members: {} / Found members: {} / New members in pool: {} / New pct: {}%".format(g['members'], c,
+                                                                                                       (len(members_pool) - len_members),
+                                                                                                                      (float(len(members_pool) - len_members)/c*100)
+                                                                                                       )
+                        len_members = len(members_pool)
+
 
 if __name__ == '__main__':
     # Get args
     parser = argparse.ArgumentParser()
     parser.add_argument('--api_key', type=str, required=True)
     parser.add_argument('--contributor_name', type=str, required=True)
+    parser.add_argument('--get_member_ids', dest='get_member_ids', action='store_true')
+    parser.set_defaults(get_member_ids=True)
 
     args = parser.parse_args()
     print args
