@@ -2,6 +2,8 @@
 
 Getting list of my Meetups and filtering out relevant ones (to broadcast a new event in):
 
+**If you don't have Python installed:* https://wiki.python.org/moin/BeginnersGuide/Download
+
 usage:
 
 1. Go to https://secure.meetup.com/meetup_api/key/ and get you API key.
@@ -20,3 +22,4 @@ Error: No JSON object could be decoded. Retrying in 2 seconds...
 Error: No JSON object could be decoded. Retrying in 4 seconds...
 Error: No JSON object could be decoded. Retrying in 8 seconds...
 so far 2000 records.```
+
