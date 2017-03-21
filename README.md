@@ -2,7 +2,7 @@
 
 Getting list of my Meetups and filtering out relevant ones (to broadcast a new event in):
 
-**If you don't have Python installed:* https://wiki.python.org/moin/BeginnersGuide/Download
+If you don't have Python installed:* https://wiki.python.org/moin/BeginnersGuide/Download
 
 usage:
 
